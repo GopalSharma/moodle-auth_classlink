@@ -434,7 +434,18 @@ class base {
         $classlinkusername = $idtoken->claim('upn');
         if (empty($classlinkusername)) {
             $classlinkusername = $idtoken->claim('sub');
-        }
+	}
+
+        // Look for local moodle user by matched email:
+        $email = $idtoken->claim('email');
+        if (!empty($email)) {
+            $existingUser = $DB->get_record("user", array("email"=>$email), "id");
+       
+            if ($existingUser) {
+                $userid = $existingUser->id;
+                $user = $DB->update_record("user", array("id"=>$userid, "username"=>$username, "auth"=>'classlink'));
+            }
+	}
 
         // We should not fail here (idtoken was verified earlier to at least contain 'sub', but just in case...).
         if (empty($classlinkusername)) {
